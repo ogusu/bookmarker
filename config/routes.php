@@ -46,6 +46,13 @@ use Cake\Routing\Route\DashedRoute;
  */
 Router::defaultRouteClass(DashedRoute::class);
 
+/**
+ * /bookmarks/tagged/パスをBookmarksController::tags()に接続する。
+ */
+Router::scope( '/bookmarks', ['controller' => 'Bookmarks'], function($routes) {
+    // 末尾の*は渡された引数を持っていることを示す。
+    $routes->connect('/tagged/*', ['action' => 'tags']);
+});
 Router::scope('/', function (RouteBuilder $routes) {
     /**
      * Here, we are connecting '/' (base path) to a controller called 'Pages',
