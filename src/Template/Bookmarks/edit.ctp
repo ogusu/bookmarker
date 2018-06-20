@@ -25,11 +25,11 @@
     <fieldset>
         <legend><?= __('Edit Bookmark') ?></legend>
         <?php
-            echo $this->Form->control('user_id', ['options' => $users]);
+            //echo $this->Form->control('user_id', ['options' => $users]);
             echo $this->Form->control('title');
             echo $this->Form->control('description');
             echo $this->Form->control('url');
-            echo $this->Form->control('tags._ids', ['options' => $tags]);
+            echo $this->Form->control('tag_string', ['type' => 'text'])
         ?>
     </fieldset>
     <?= $this->Form->button(__('Submit')) ?>

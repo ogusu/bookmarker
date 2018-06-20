@@ -82,6 +82,55 @@ class BookmarksTable extends Table
     }
 
     /**
+     * 保存の前にデータの調整を行う
+     * @param $event
+     * @param $entity
+     * @param $options
+     */
+    public function beforeSave($event, $entity, $options) {
+        // カンマ区切りのタグ文字を、TagsEntity配列に変換。既存のデータ＋新規のデータ
+        if($entity->tag_string) {
+            $entity->tags = $this->_buildTags($entity->tag_string);
+        }
+    }
+
+    /**
+     * カンマ区切りの文字列を、TagsEntity配列に戻す
+     * DBの既存の項目と一致するものはそのまま、新しいタグは新規のEntityとして追加して、返す
+     * @param $tagString
+     * @return array
+     */
+    protected function _buildTags($tagString) {
+        // trim
+        $newTags = array_map('trim', explode(',', $tagString));
+        // remove empty tag
+        $newTags = array_filter($newTags);
+        // distinct
+        $newTags = array_unique($newTags);
+
+        $out = [];
+        $query = $this->Tags->find()
+            ->where(['Tags.title IN' => $newTags]);
+
+        // 新しいタグの一覧から既存のタグを削除
+        foreach($query->extract('title') as $existing) {
+            $index = array_search($existing, $newTags);
+            if($index !== false) {
+                unset($newTags[$index]);
+            }
+        }
+        // 既存のタグの追加
+        foreach($query as $tag) {
+            $out[] = $tag;
+        }
+        // 新しいタグの追加
+        foreacH($newTags as $tag) {
+            $out[] = $this->Tags->newEntity(['title' => $tag]);
+        }
+        return $out;
+    }
+
+    /**
      * Returns a rules checker object that will be used for validating
      * application integrity.
      *
@@ -102,7 +151,9 @@ class BookmarksTable extends Table
      * @return Query 絞り込み結果のクエリービルダーオブジェクト
      */
     public function findTagged(Query $query, array $options) {
-        $bookmarks = $this->find()->select(['id', 'url', 'title', 'description']);
+        $bookmarks = $this->find()
+            ->contain('Tags')
+            ->select(['id', 'url', 'title', 'description']);
         if(empty($options['tags'])) {
             $bookmarks
                 ->leftJoinWith('Tags')

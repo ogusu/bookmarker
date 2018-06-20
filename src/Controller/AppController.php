@@ -36,6 +36,7 @@ class AppController extends Controller
      * e.g. `$this->loadComponent('Security');`
      *
      * @return void
+     * @throws \Exception
      */
     public function initialize()
     {
@@ -51,5 +52,39 @@ class AppController extends Controller
          * see https://book.cakephp.org/3.0/en/controllers/components/security.html
          */
         //$this->loadComponent('Security');
+
+
+        $this->loadComponent('Auth', [
+            // ユーザーが自分が作成したブックマークのみ表示できるよう制限する準備。BookmarksControllerで処理している
+            'authorize' => 'Controller',
+            // ログインフォーム認証を設定
+            'authenticate' => [
+                'Form' => [
+                    'fields' => [
+                        'username' => 'email',
+                        'password' => 'password'
+                    ]
+                ]
+            ],
+            'loginAction' => [
+                'controller' => 'Users',
+                'action' => 'login'
+            ],
+            'unauthorizedRedirect' => $this->referer() // 未認証時は本のページに戻す
+        ]);
+
+        // PagesControllerが動作し続けるようにdisplayアクションを許可
+        $this->Auth->allow(['display']);
+    }
+
+    /**
+     * コントローラーにアクセスするたびに認証を行う。
+     * デフォルトでは全操作を拒否。各コントローラーで条件に応じて操作を許可する
+     *
+     * @param $user
+     * @return bool
+     */
+    public function isAuthorized($user) {
+        return false;
     }
 }
